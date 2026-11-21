@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spot the Shift — a spot-the-difference game</title>
+<style>
+  :root { box-sizing: border-box; }
+  * { box-sizing: inherit; }
+  body {
+    margin: 0;
+    padding: 16px;
+    font-family: system-ui, sans-serif;
+    background: #f7ead7;
+    color: #16324f;
+  }
+  .wrap {
+    max-width: 1280px;
+    margin: 0 auto;
+  }
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 12px;
+    border-bottom: 3px solid #16324f;
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+  }
+  header h1 {
+    margin: 0;
+    font-size: 28px;
+    letter-spacing: 2px;
+  }
+  header .subtitle {
+    margin: 4px 0 0;
+    font-size: 13px;
+    opacity: .8;
+  }
+  .hud-right {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    flex-wrap: wrap;
+  }
+  #remaining-big {
+    font-size: 52px;
+    color: #b8860b;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: 1px;
+    text-shadow: 0 2px 0 #fff, 0 0 18px rgba(245, 179, 1, .45);
+  }
+  .timer-block { min-width: 140px; }
+  #timer-text { font-weight: 700; }
+  #timer-text.low { color: #e0463f; }
+  .timer-bar {
+    height: 10px;
+    width: 140px;
+    background: #e0d3b8;
+    border-radius: 6px;
+    overflow: hidden;
+    margin-top: 4px;
+  }
+  #timer-fill {
+    height: 100%;
+    width: 100%;
+    background: #22a06b;
+  }
+  .score-block { font-weight: 700; }
+  #level-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+  }
+  .captions-row {
+    display: flex;
+    justify-content: space-between;
+    max-width: 1160px;
+    margin: 0 auto;
+  }
+  .captions-row span {
+    width: 560px;
+    text-align: center;
+    font-weight: bold;
+    letter-spacing: 1px;
+  }
+  #game {
+    display: block;
+    margin: 8px auto;
+    background: #fff;
+    border: 4px solid #16324f;
+    border-radius: 12px;
+  }
+  #found-list {
+    margin: 10px 0;
+    min-height: 30px;
+  }
+  .found-chip {
+    display: inline-block;
+    border: 1px solid #2f9e44;
+    background: #e3f7e3;
+    border-radius: 999px;
+    margin: 2px;
+    padding: 2px 8px;
+    font-size: 13px;
+  }
+  #msg-line {
+    text-align: center;
+    min-height: 20px;
+    font-weight: 600;
+  }
+  .btn-row {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin: 10px 0;
+  }
+  button {
+    background: #f7ead7;
+    color: #16324f;
+    border: 2px solid #16324f;
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-weight: bold;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  button.active {
+    background: #16324f;
+    color: #fff;
+  }
+  button.done { opacity: .55; }
+  #howto {
+    max-width: 700px;
+    margin: 10px auto;
+    background: #fff;
+    border: 2px solid #16324f;
+    border-radius: 10px;
+    padding: 14px 18px;
+  }
+  #overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(22, 50, 79, .75);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  #overlay-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 28px;
+    text-align: center;
+    min-width: 280px;
+    max-width: 90vw;
+  }
+  .hidden { display: none !important; }
+  footer {
+    text-align: center;
+    font-size: 12px;
+    opacity: .75;
+    margin-top: 16px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>SPOT THE SHIFT</h1>
+      <p class="subtitle">Find every sneaky change — 6 scenes, 48 differences</p>
+    </div>
+    <div class="hud-right">
+      <div id="scene-label">Scene 1</div>
+      <div id="remaining-big">8</div>
+      <div class="timer-block">
+        <span id="timer-text">2:30</span>
+        <div class="timer-bar"><div id="timer-fill"></div></div>
+      </div>
+      <div class="score-block">
+        Score <span id="score-val">0</span>
+        <span id="combo-val"></span>
+      </div>
+    </div>
+  </header>
+
+  <div id="level-row"></div>
+
+  <div class="captions-row">
+    <span>LEFT — original</span>
+    <span>RIGHT — spot the changes</span>
+  </div>
+
+  <canvas id="game" width="1160" height="420"></canvas>
+
+  <div id="found-list"></div>
+  <p id="msg-line">Find all 8 differences on this scene.</p>
+
+  <div class="btn-row">
+    <button id="hint-btn">Hint (3)</button>
+    <button id="pause-btn">Pause</button>
+    <button id="sound-btn">Sound: on</button>
+    <button id="restart-btn">Restart scene</button>
+    <button id="howto-btn">How to play</button>
+  </div>
+
+  <div id="howto" class="hidden">
+    <p>Two pictures look the same, but the right one has 8 sneaky changes. Click a difference on either picture to mark it. Wrong clicks cost 5 seconds.</p>
+    <p>Keys: <strong>H</strong> hint, <strong>P</strong> pause, <strong>M</strong> sound, <strong>R</strong> restart, <strong>N</strong> next scene, <strong>1–6</strong> jump to a scene, arrow keys move the crosshair, <strong>Enter</strong> guesses. Hover shows a magnifier.</p>
+    <p>Fair differences are: removed, added, recoloured, moved, resized, flipped, rotated or pattern-changed — sometimes only a small detail shifts.</p>
+  </div>
+
+  <div id="overlay" class="hidden"><div id="overlay-card"></div></div>
+
+  <footer>
+    Keys: H hint · P pause · M sound · R restart · N next · 1–6 scenes · arrows + Enter to guess · hover = magnifier
+  </footer>
+</div>
+<script type="module" src="./src/main.js"></script>
+</body>
+</html>
