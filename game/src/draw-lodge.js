@@ -1,257 +1,359 @@
-import { circle, ellipse, rect, rrect, poly, star, line, vgrad, text, check, ring, softShadow, vignette, speck } from './render.js';
+// Winter Ski Lodge — snowy lodge interior, 8 sneaky differences.
+(function () {
+  'use strict';
 
-export function drawLodge(ctx, changed) {
-  // ===== BACKGROUND =====
-  rect(ctx, 0, 0, 560, 420, '#c98f5f');
+  const DIFFS = [
+    { name: 'Fireplace glow', x: 320, y: 280, r: 30 },
+    { name: 'Armchair', x: 500, y: 340, r: 40 },
+    { name: 'Ski', x: 580, y: 200, r: 24 },
+    { name: 'Book', x: 151, y: 349, r: 20 },
+    { name: 'Mug', x: 354, y: 379, r: 20 },
+    { name: 'Window streak', x: 130, y: 110, r: 26 },
+    { name: 'Firewood', x: 90, y: 430, r: 20 },
+    { name: 'Rug', x: 320, y: 440, r: 24 },
+  ];
 
-  for (let y = 40; y < 420; y += 46) {
-    line(ctx, 0, y, 560, y, '#a5713f', 2);
-  }
+  function draw(ctx, W, H, shifted) {
+    const h = window.H;
+    const R = h.rng(83);
 
-  const g = vgrad(ctx, 0, 0, 560, 420, 'rgba(255,255,255,0.06)', 'rgba(90,50,20,0.12)');
-  ctx.fillStyle = g;
-  ctx.fillRect(0, 0, 560, 420);
+    // --- wood-panel wall ---
+    ctx.fillStyle = h.lg(ctx, 0, 0, 0, H, [[0, '#8a5f36'], [1, '#5d3f22']]);
+    ctx.fillRect(0, 0, W, H);
+    ctx.strokeStyle = 'rgba(40,25,10,0.4)';
+    ctx.lineWidth = 2;
+    for (let x = 0; x <= W; x += 80) {
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, 400);
+      ctx.stroke();
+    }
+    ctx.fillStyle = '#4a2f1d';
+    ctx.fillRect(0, 0, W, 14);
+    // floor
+    ctx.fillStyle = '#6b4423';
+    ctx.fillRect(0, 400, W, 80);
+    ctx.strokeStyle = 'rgba(40,25,10,0.45)';
+    for (let y = 420; y < H; y += 20) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(W, y);
+      ctx.stroke();
+    }
 
-  const knots = [[60, 300], [500, 200], [330, 40]];
-  for (const [kx, ky] of knots) {
-    circle(ctx, kx, ky, 6, '#5a3a1a');
-    ring(ctx, kx, ky, 9, '#3f2912', 2);
-  }
-
-  ctx.strokeStyle = '#2f5d3a';
-  ctx.lineWidth = 6;
-  ctx.beginPath();
-  ctx.moveTo(0, 12);
-  ctx.quadraticCurveTo(280, 44, 560, 12);
-  ctx.stroke();
-
-  const ox = [40, 110, 180, 250, 320, 390, 460, 530];
-  for (const x of ox) {
-    const gy = 12 + Math.sin(x / 560 * Math.PI) * 26;
-    circle(ctx, x, gy, 7, '#c0392b');
-  }
-  for (let i = 0; i < ox.length - 1; i++) {
-    const mx = (ox[i] + ox[i + 1]) / 2 + 6;
-    const my = 12 + Math.sin(mx / 560 * Math.PI) * 26 + 4;
-    circle(ctx, mx, my, 5, '#d4af37');
-  }
-
-  // ===== MIDGROUND =====
-  // window
-  rect(ctx, 380, 60, 150, 120, '#bfe4f5');
-  drawSnowPine(ctx, 425, 150);
-  drawSnowPine(ctx, 465, 145);
-  drawSnowPine(ctx, 505, 155);
-  rect(ctx, 380, 170, 150, 10, '#ffffff');
-  speck(ctx, [[400, 80, 3], [440, 100, 3], [500, 75, 3], [470, 140, 3]], '#ffffff');
-  ctx.strokeStyle = '#8a5a35';
-  ctx.lineWidth = 6;
-  ctx.strokeRect(380, 60, 150, 120);
-  line(ctx, 455, 60, 455, 180, '#8a5a35', 6);
-
-  // picture frame
-  rect(ctx, 200, 60, 80, 60, '#8a5a35');
-  rect(ctx, 206, 66, 68, 48, '#bfe4f5');
-  poly(ctx, [[210, 110], [230, 80], [250, 110]], '#8d99ae');
-  poly(ctx, [[235, 110], [255, 75], [275, 110]], '#9aa7b8');
-  circle(ctx, 260, 75, 4, '#f4d35e');
-
-  // fireplace surround
-  rrect(ctx, 52, 70, 96, 110, 6, '#8d99ae');
-  rrect(ctx, 64, 82, 72, 60, 4, '#5a3a22');
-  rect(ctx, 44, 62, 112, 10, '#6b5a4a');
-  drawCandle(ctx, 60, 52);
-  drawCandle(ctx, 140, 52);
-  drawStocking(ctx, 70, 150, '#c0392b');
-  drawStocking(ctx, 100, 152, '#2f5d3a');
-  drawStocking(ctx, 130, 150, '#d4af37');
-
-  // rug
-  ellipse(ctx, 280, 385, 190, 26, '#a93226');
-  ellipse(ctx, 280, 385, 150, 18, '#c0392b');
-  ellipse(ctx, 280, 385, 110, 11, '#e07b39');
-  ctx.strokeStyle = '#f0d64a';
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.ellipse(280, 385, 170, 22, 0, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.ellipse(280, 385, 130, 14, 0, 0, Math.PI * 2);
-  ctx.stroke();
-
-  // side table
-  rect(ctx, 430, 320, 70, 12, '#6b4a2f');
-  rect(ctx, 435, 332, 8, 48, '#5a3a2f');
-  rect(ctx, 487, 332, 8, 48, '#5a3a2f');
-  rect(ctx, 435, 360, 60, 6, '#6b4a2f');
-  const drawMug = (c, x, y) => {
-    rrect(c, x, y, 22, 20, 4, '#e8e2d6');
-    rrect(c, x + 2, y + 2, 18, 16, 3, '#8a3b2a');
-    ring(c, x + 23, y + 10, 6, '#e8e2d6', 2);
-    line(c, x + 7, y - 5, x + 5, y - 15, 'rgba(255,255,255,0.55)', 2);
-    line(c, x + 15, y - 5, x + 13, y - 17, 'rgba(255,255,255,0.45)', 2);
-  };
-  drawMug(ctx, 465, 305);
-  rect(ctx, 440, 308, 30, 5, '#c0392b');
-  rect(ctx, 442, 303, 26, 5, '#3f7fe0');
-  rect(ctx, 444, 298, 22, 5, '#2f5d3a');
-  // ---- foreground ----
-  ellipse(ctx, 100, 180, 110, 90, 'rgba(255,150,60,0.10)');
-
-  // --- lighting (identical in both panels) ---
-  circle(ctx, 100, 120, 34, 'rgba(255,150,60,0.12)');
-
-  const fireGlow = ctx.createRadialGradient(100, 385, 0, 100, 385, 130);
-  fireGlow.addColorStop(0, 'rgba(255,170,80,0.20)');
-  fireGlow.addColorStop(1, 'rgba(255,170,80,0)');
-  ctx.save();
-  ctx.fillStyle = fireGlow;
-  ctx.fillRect(0, 300, 280, 120);
-  ctx.restore();
-
-  poly(ctx, [[400, 360], [470, 360], [500, 408], [430, 408]], 'rgba(191,228,245,0.16)');
-
-  line(ctx, 430, 320, 500, 320, 'rgba(255,255,255,0.35)', 2);
-
-  ctx.save();
-  ctx.strokeStyle = 'rgba(240,214,74,0.55)';
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.ellipse(280, 385, 170, 22, 0, Math.PI * 1.05, Math.PI * 1.95);
-  ctx.stroke();
-  ctx.restore();
-  softShadow(ctx, 90, 376, 50, 8);
-  softShadow(ctx, 160, 398, 50, 6);
-  vignette(ctx, 560, 420);
-
-  // 1. fireplace — same flames, only the core and the log shift colour
-  poly(ctx, [[76, 142], [100, 96], [124, 142]], '#ff7b24');
-  if (changed.has('fireplace')) {
-    poly(ctx, [[86, 142], [100, 112], [114, 142]], '#ffedb0');
-    line(ctx, 72, 138, 128, 138, '#6b4226', 4);
-  } else {
-    poly(ctx, [[86, 142], [100, 112], [114, 142]], '#ffd23f');
-    line(ctx, 72, 138, 128, 138, '#4a2e16', 4);
-  }
-
-  // 2. moose head — gone in one panel
-  if (!changed.has('moose-head')) {
-    line(ctx, 298, 72, 286, 56, '#5a3a1e', 3);
-    line(ctx, 286, 56, 274, 50, '#5a3a1e', 3);
-    line(ctx, 322, 72, 334, 56, '#5a3a1e', 3);
-    line(ctx, 334, 56, 346, 50, '#5a3a1e', 3);
-    ellipse(ctx, 310, 86, 16, 21, '#8a5a30');
-    ellipse(ctx, 310, 102, 9, 8, '#7a4c26');
-    circle(ctx, 304, 82, 2, '#2a1a10');
-    circle(ctx, 316, 82, 2, '#2a1a10');
-    ellipse(ctx, 310, 104, 4, 3, '#2a1a10');
-  }
-
-  // 3. skis — leaning crossed against the right wall, below the window
-  const skiPath = () => {
-    line(ctx, 508, 208, 542, 392, '#c0392b', 7);
-    line(ctx, 508, 208, 542, 392, '#ffffff', 2);
-    line(ctx, 542, 208, 508, 392, '#3f7fe0', 7);
-    line(ctx, 542, 208, 508, 392, '#ffffff', 2);
-  };
-  ctx.save();
-  if (changed.has('skis')) {
-    ctx.translate(525, 300);
-    ctx.scale(-1, 1);
-    ctx.translate(-525, -300);
-  }
-  skiPath();
-  ctx.restore();
-
-  // 4. armchair — a touch smaller, feet planted on the floor
-  const armScale = changed.has('armchair') ? 0.8 : 1;
-  ctx.save();
-  ctx.translate(90, 374);
-  ctx.scale(armScale, armScale);
-  ctx.translate(-90, -374);
-  rrect(ctx, 62, 300, 56, 52, 10, '#6b3fa0');
-  rrect(ctx, 52, 330, 16, 34, 8, '#7d4cb8');
-  rrect(ctx, 112, 330, 16, 34, 8, '#7d4cb8');
-  rrect(ctx, 62, 340, 56, 24, 8, '#9a63d4');
-  line(ctx, 72, 350, 108, 350, '#6b3fa0', 2);
-  line(ctx, 72, 357, 108, 357, '#6b3fa0', 2);
-  rect(ctx, 66, 364, 8, 10, '#4a2e6b');
-  rect(ctx, 106, 364, 8, 10, '#4a2e6b');
-  ctx.restore();
-
-  // 5. clock — hung on a different nail
-  const clkX = changed.has('clock') ? 344 : 280;
-  const clkY = changed.has('clock') ? 176 : 220;
-  ctx.save();
-  ctx.translate(clkX, clkY);
-  circle(ctx, 0, 0, 22, '#3b2a1a');
-  circle(ctx, 0, 0, 19, '#f7efdc');
-  for (let i = 0; i < 12; i++) {
-    const tickA = (i / 12) * Math.PI * 2;
-    circle(ctx, Math.cos(tickA) * 15, Math.sin(tickA) * 15, 1.2, '#5a4632');
-  }
-  line(ctx, 0, 0, 0, -11, '#3b2a1a', 2);
-  line(ctx, 0, 0, 8, 5, '#3b2a1a', 2);
-  ctx.restore();
-
-  // 6. snowboard — only in one panel
-  if (changed.has('snowboard')) {
+    // --- window with snowy night (left) ---
     ctx.save();
-    ctx.translate(490, 300);
-    ctx.rotate(0.12);
-    rrect(ctx, -12, -48, 24, 96, 12, '#2ec4b6');
-    line(ctx, 0, -40, 0, 40, '#ffffff', 2);
-    circle(ctx, 0, -28, 3, '#ffffff');
-    circle(ctx, 0, 28, 3, '#ffffff');
+    ctx.translate(130, 120);
+    ctx.fillStyle = '#3a2f22';
+    h.rr(ctx, -58, -72, 116, 144, 6);
+    ctx.fill();
+    ctx.fillStyle = h.lg(ctx, 0, -64, 0, 64, [[0, '#0e1e3a'], [1, '#2a4a6b']]);
+    ctx.fillRect(-50, -64, 100, 128);
+    // snow ground + pines outside
+    ctx.fillStyle = '#dfe9f2';
+    ctx.fillRect(-50, 30, 100, 34);
+    ctx.fillStyle = '#122615';
+    for (const px of [-32, 0, 30]) {
+      ctx.beginPath();
+      ctx.moveTo(px, 30);
+      ctx.lineTo(px - 14, -6);
+      ctx.lineTo(px + 14, -6);
+      ctx.closePath();
+      ctx.fill();
+    }
+    // moon
+    ctx.fillStyle = '#f4ecd0';
+    h.circ(ctx, 28, -42, 12);
+    ctx.fill();
+    // snowflakes
+    ctx.fillStyle = '#ffffff';
+    for (let i = 0; i < 14; i++) {
+      h.circ(ctx, -46 + R() * 92, -60 + R() * 80, 1.6);
+      ctx.fill();
+    }
+    // faint light streak across the glass (moves down when shifted)
+    ctx.save();
+    ctx.globalAlpha = 0.35;
+    ctx.fillStyle = '#fff3c9';
+    const sy = shifted ? 20 : -20;
+    ctx.beginPath();
+    ctx.moveTo(-50, sy - 6);
+    ctx.lineTo(50, sy - 26);
+    ctx.lineTo(50, sy - 16);
+    ctx.lineTo(-50, sy + 4);
+    ctx.closePath();
+    ctx.fill();
     ctx.restore();
+    ctx.strokeStyle = '#3a2f22';
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.moveTo(0, -64);
+    ctx.lineTo(0, 64);
+    ctx.moveTo(-50, 0);
+    ctx.lineTo(50, 0);
+    ctx.stroke();
+    ctx.restore();
+
+    // --- bookshelf (left-bottom) ---
+    ctx.save();
+    ctx.translate(150, 400);
+    ctx.fillStyle = '#5d3f22';
+    h.rr(ctx, -62, -76, 124, 76, 4);
+    ctx.fill();
+    const spineColors = ['#d64545', '#4a7ac2', '#5a9e52', '#e8a83d', '#8a5fd0'];
+    for (let s = 0; s < 2; s++) {
+      const y0 = -66 + s * 36;
+      for (let i = 0; i < 5; i++) {
+        let col = spineColors[(i + s * 2) % 5];
+        if (s === 0 && i === 2) col = shifted ? '#3f9e52' : '#d64545'; // one spine swaps red -> green
+        ctx.fillStyle = col;
+        ctx.fillRect(-54 + i * 23, y0, 19, 30);
+        ctx.fillStyle = 'rgba(255,255,255,0.35)';
+        ctx.fillRect(-54 + i * 23, y0 + 4, 19, 3);
+      }
+      ctx.fillStyle = '#4a2f1d';
+      ctx.fillRect(-62, y0 + 30, 124, 5);
+    }
+    ctx.restore();
+
+    // --- fireplace (centre) ---
+    ctx.save();
+    ctx.translate(320, 280);
+    // stone surround
+    ctx.fillStyle = '#8a8f98';
+    h.rr(ctx, -78, -84, 156, 168, 8);
+    ctx.fill();
+    ctx.strokeStyle = '#6a6f78';
+    ctx.lineWidth = 2;
+    for (let i = 0; i < 3; i++) {
+      ctx.beginPath();
+      ctx.moveTo(-78, -44 + i * 40);
+      ctx.lineTo(78, -44 + i * 40);
+      ctx.stroke();
+    }
+    for (let i = 0; i < 3; i++) {
+      ctx.beginPath();
+      ctx.moveTo(-26 + i * 52, -84);
+      ctx.lineTo(-26 + i * 52, 84);
+      ctx.stroke();
+    }
+    // firebox
+    ctx.fillStyle = '#1e1410';
+    h.rr(ctx, -52, -30, 104, 90, 6);
+    ctx.fill();
+    // logs
+    ctx.fillStyle = '#6b4423';
+    h.rr(ctx, -34, 34, 68, 12, 6);
+    ctx.fill();
+    ctx.fillStyle = '#7d5230';
+    h.rr(ctx, -30, 24, 60, 11, 5);
+    ctx.fill();
+    // flames
+    const flame = function (x, y, s, color) {
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.moveTo(x, y - 44 * s);
+      ctx.quadraticCurveTo(x + 22 * s, y - 8 * s, x + 10 * s, y + 6 * s);
+      ctx.quadraticCurveTo(x, y + 13 * s, x - 10 * s, y + 6 * s);
+      ctx.quadraticCurveTo(x - 22 * s, y - 8 * s, x, y - 44 * s);
+      ctx.fill();
+    };
+    flame(0, 44, 1.1, '#ff5a1f');
+    flame(0, 44, 0.8, '#ff9a1f');
+    flame(0, 44, 0.5, '#ffd23d');
+    // glow + pool of light on the floor (the glow itself is a difference:
+    // brighter, wider and yellower when shifted, so the spot reads clearly)
+    h.glow(ctx, 0, 10, shifted ? 158 : 130, shifted ? '#ffe14d' : '#ff9a3d', shifted ? 0.55 : 0.45);
+    ctx.save();
+    ctx.globalAlpha = 0.28;
+    ctx.fillStyle = shifted ? '#ffd23d' : '#ff9a3d';
+    h.el(ctx, 0, 150, 120, 22);
+    ctx.fill();
+    ctx.restore();
+    // mantel + stockings
+    ctx.fillStyle = '#5d3f22';
+    ctx.fillRect(-86, -96, 172, 14);
+    ctx.fillStyle = '#d64545';
+    for (const sx of [-48, 0, 48]) {
+      ctx.beginPath();
+      ctx.moveTo(sx - 8, -82);
+      ctx.lineTo(sx + 8, -82);
+      ctx.lineTo(sx + 8, -62);
+      ctx.lineTo(sx + 16, -62);
+      ctx.lineTo(sx + 16, -54);
+      ctx.lineTo(sx - 8, -54);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.restore();
+
+    // --- firewood stack (one extra log when shifted) ---
+    ctx.save();
+    ctx.translate(90, 430);
+    ctx.fillStyle = '#6b4423';
+    for (const lx of [-16, 16]) {
+      h.rr(ctx, lx - 16, -8, 32, 12, 6);
+      ctx.fill();
+    }
+    h.rr(ctx, 0, -20, 32, 12, 6);
+    ctx.fill();
+    ctx.fillStyle = '#8a5a30';
+    h.el(ctx, 16, -14, 5, 6);
+    ctx.fill();
+    if (shifted) {
+      ctx.fillStyle = '#6b4423';
+      h.rr(ctx, -32, -20, 30, 12, 6);
+      ctx.fill();
+      ctx.strokeStyle = '#4a2f1d';
+      ctx.lineWidth = 1.5;
+      h.rr(ctx, -32, -20, 30, 12, 6);
+      ctx.stroke();
+      ctx.fillStyle = '#d9b878';
+      h.el(ctx, -2, -14, 5, 6);
+      ctx.fill();
+    }
+    ctx.restore();
+
+    // --- rug (stripes swap when shifted) ---
+    ctx.save();
+    ctx.translate(320, 440);
+    ctx.fillStyle = '#7a2f2f';
+    h.rr(ctx, -110, -16, 220, 32, 8);
+    ctx.fill();
+    if (shifted) {
+      ctx.fillStyle = '#e8dcc0';
+      ctx.fillRect(-100, -10, 200, 5);
+      ctx.fillStyle = '#4a7ac2';
+      ctx.fillRect(-100, 4, 200, 5);
+    } else {
+      ctx.fillStyle = '#4a7ac2';
+      ctx.fillRect(-100, -10, 200, 5);
+      ctx.fillStyle = '#e8dcc0';
+      ctx.fillRect(-100, 4, 200, 5);
+    }
+    ctx.restore();
+
+    // --- table with mugs (centre-bottom) ---
+    ctx.save();
+    ctx.translate(380, 400);
+    ctx.fillStyle = '#5d3f22';
+    ctx.fillRect(-52, -8, 104, 10);
+    ctx.fillRect(-44, 2, 8, 26);
+    ctx.fillRect(36, 2, 8, 26);
+    // mug 1: handle flips side when shifted
+    ctx.fillStyle = '#d64545';
+    h.rr(ctx, -38, -34, 24, 26, 4);
+    ctx.fill();
+    ctx.strokeStyle = '#d64545';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    if (shifted) ctx.arc(-38, -21, 8, Math.PI / 2, Math.PI * 1.5);
+    else ctx.arc(-14, -21, 8, -Math.PI / 2, Math.PI / 2);
+    ctx.stroke();
+    // mug 2
+    ctx.fillStyle = '#4a7ac2';
+    h.rr(ctx, 8, -34, 24, 26, 4);
+    ctx.fill();
+    ctx.strokeStyle = '#4a7ac2';
+    ctx.beginPath();
+    ctx.arc(32, -21, 8, -Math.PI / 2, Math.PI / 2);
+    ctx.stroke();
+    ctx.restore();
+
+    // --- armchair, sitting on the floor (grows when shifted) ---
+    ctx.save();
+    ctx.translate(500, 340);
+    const as = shifted ? 1.2 : 1;
+    ctx.scale(as, as);
+    ctx.fillStyle = '#8a2f2f';
+    h.rr(ctx, -46, -52, 92, 66, 12);
+    ctx.fill();
+    h.rr(ctx, -46, -52, 92, 30, 12);
+    ctx.fill();
+    ctx.fillStyle = '#a83a3a';
+    h.rr(ctx, -38, -46, 76, 24, 8);
+    ctx.fill();
+    // arms
+    ctx.fillStyle = '#6e2424';
+    h.rr(ctx, -52, -16, 18, 44, 8);
+    ctx.fill();
+    h.rr(ctx, 34, -16, 18, 44, 8);
+    ctx.fill();
+    // cushion + legs on the floor
+    ctx.fillStyle = '#c24545';
+    h.rr(ctx, -34, -8, 68, 18, 6);
+    ctx.fill();
+    ctx.fillStyle = '#4a2f1d';
+    ctx.fillRect(-40, 26, 8, 10);
+    ctx.fillRect(32, 26, 8, 10);
+    ctx.restore();
+
+    // --- skis leaning on the wall (one goes missing when shifted) ---
+    ctx.save();
+    ctx.translate(580, 200);
+    ctx.rotate(0.22);
+    ctx.fillStyle = '#d64545';
+    h.rr(ctx, -8, -84, 16, 168, 8);
+    ctx.fill();
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(-8, -30, 16, 10);
+    if (!shifted) {
+      ctx.fillStyle = '#4a7ac2';
+      h.rr(ctx, 12, -84, 16, 168, 8);
+      ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(12, -30, 16, 10);
+    }
+    // poles
+    ctx.strokeStyle = '#5d6b7a';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(-22, -70);
+    ctx.lineTo(-30, 80);
+    ctx.moveTo(36, -70);
+    ctx.lineTo(44, 80);
+    ctx.stroke();
+    ctx.restore();
+
+    // --- moonlight pool, mantel books, wall picture, mug steam (identical in both) ---
+    ctx.save();
+    ctx.globalAlpha = 0.1;
+    ctx.fillStyle = '#a8c8e8';
+    h.el(ctx, 200, 445, 50, 10);
+    ctx.fill();
+    ctx.restore();
+    ctx.fillStyle = '#4a7ac2';
+    ctx.fillRect(250, 170, 16, 14);
+    ctx.fillStyle = '#5a9e52';
+    ctx.fillRect(380, 172, 14, 12);
+    ctx.save();
+    ctx.fillStyle = '#3a2f22';
+    h.rr(ctx, 540, 50, 60, 44, 4);
+    ctx.fill();
+    ctx.fillStyle = '#2a4a6b';
+    ctx.fillRect(545, 55, 50, 34);
+    ctx.fillStyle = '#dfe9f2';
+    ctx.beginPath();
+    ctx.moveTo(545, 89);
+    ctx.lineTo(565, 66);
+    ctx.lineTo(580, 89);
+    ctx.closePath();
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(570, 89);
+    ctx.lineTo(590, 70);
+    ctx.lineTo(595, 89);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+    ctx.strokeStyle = 'rgba(255,255,255,0.6)';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(400, 348);
+    ctx.quadraticCurveTo(406, 338, 400, 330);
+    ctx.stroke();
   }
 
-  // 7. log pile — one log short
-  const logList = [[132, 386], [158, 386], [184, 386], [145, 370], [171, 370]];
-  if (changed.has('log-pile')) logList.pop();
-  for (let i = 0; i < logList.length; i++) {
-    ellipse(ctx, logList[i][0], logList[i][1], 15, 9, '#8a5a30');
-    circle(ctx, logList[i][0] - 11, logList[i][1], 5, '#d9b878');
-  }
-
-  // 8. frost pattern — same ice colour, different crystals
-  ctx.save();
-  ctx.translate(390, 350);
-  if (changed.has('frosty-window')) {
-    line(ctx, -15, -5, 15, 5, '#dff3ff', 2);
-    line(ctx, -5, 14, 5, -14, '#dff3ff', 2);
-    line(ctx, 0, 0, -14, 7, '#dff3ff', 2);
-    circle(ctx, -10, -14, 2.5, '#dff3ff');
-    circle(ctx, 14, 10, 2.5, '#dff3ff');
-  } else {
-    line(ctx, -16, 0, 16, 0, '#dff3ff', 2);
-    line(ctx, -8, -13.9, 8, 13.9, '#dff3ff', 2);
-    line(ctx, -8, 13.9, 8, -13.9, '#dff3ff', 2);
-    circle(ctx, -16, 12, 2.5, '#dff3ff');
-    circle(ctx, 16, 12, 2.5, '#dff3ff');
-  }
-  ctx.restore();
-}
-function drawStocking(ctx, x, y, color) {
-  line(ctx, x, y - 4, x, y, '#5a3a22', 2);
-  rrect(ctx, x - 7, y, 14, 18, 4, color);
-  poly(ctx, [[x - 7, y + 12], [x + 7, y + 12], [x + 7, y + 18], [x + 12, y + 18], [x + 12, y + 22], [x - 7, y + 22]], color);
-  rect(ctx, x - 8, y - 2, 16, 5, '#fdf7ec');
-}
-
-function drawCandle(ctx, x, y) {
-  rect(ctx, x - 3, y - 14, 6, 14, '#fdf7ec');
-  ellipse(ctx, x, y - 18, 3, 5, '#ffd23f');
-  circle(ctx, x, y - 18, 7, 'rgba(255,210,63,0.25)');
-  line(ctx, x, y - 14, x, y - 16, '#5a3a22', 1.5);
-}
-
-function drawSnowPine(ctx, x, y) {
-  rect(ctx, x - 2, y - 8, 4, 8, '#6b4226');
-  poly(ctx, [[x, y - 34], [x - 11, y - 14], [x + 11, y - 14]], '#2f5d3a');
-  poly(ctx, [[x, y - 26], [x - 9, y - 8], [x + 9, y - 8]], '#35704a');
-  poly(ctx, [[x, y - 18], [x - 7, y - 2], [x + 7, y - 2]], '#3f7f57');
-  ellipse(ctx, x, y - 32, 4, 2, '#ffffff');
-  ellipse(ctx, x - 4, y - 12, 4, 2, '#ffffff');
-  ellipse(ctx, x + 4, y - 6, 4, 2, '#ffffff');
-}
+  window.DrawLodge = draw;
+  window.LODGE_DIFFS = DIFFS;
+})();

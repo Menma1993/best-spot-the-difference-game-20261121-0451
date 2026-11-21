@@ -5,221 +5,186 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Spot the Shift — a spot-the-difference game</title>
 <style>
-  :root { box-sizing: border-box; }
-  * { box-sizing: inherit; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
-    margin: 0;
-    padding: 16px;
-    font-family: system-ui, sans-serif;
-    background: #f7ead7;
-    color: #16324f;
+    background: #10131a;
+    color: #f2ede2;
+    font-family: "Trebuchet MS", Verdana, sans-serif;
+    min-height: 100vh;
   }
-  .wrap {
-    max-width: 1280px;
-    margin: 0 auto;
-  }
+  .wrap { max-width: 1280px; margin: 0 auto; padding: 10px 16px 16px; position: relative; }
   header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    flex-wrap: wrap;
-    gap: 12px;
-    border-bottom: 3px solid #16324f;
-    padding-bottom: 10px;
-    margin-bottom: 10px;
+    display: flex; align-items: center; gap: 14px;
+    padding: 6px 2px 10px;
   }
-  header h1 {
-    margin: 0;
-    font-size: 28px;
-    letter-spacing: 2px;
+  h1 { font-size: 26px; letter-spacing: 2px; color: #ffd23d; text-shadow: 0 0 18px rgba(255,210,61,0.45); white-space: nowrap; }
+  h1 span { color: #f2ede2; }
+  .spacer { flex: 1; }
+  #level-pills { display: flex; gap: 6px; }
+  .pill {
+    width: 34px; height: 34px; border-radius: 50%;
+    border: 2px solid #5a5f73; background: #1c2130; color: #cfd4e4;
+    font-size: 15px; font-weight: bold; cursor: pointer;
   }
-  header .subtitle {
-    margin: 4px 0 0;
-    font-size: 13px;
-    opacity: .8;
+  .pill.active { border-color: #ffd23d; color: #ffd23d; box-shadow: 0 0 12px rgba(255,210,61,0.5); }
+  .btn {
+    border: 2px solid #5a5f73; background: #1c2130; color: #f2ede2;
+    font-size: 13px; font-weight: bold; letter-spacing: 1px;
+    padding: 8px 12px; border-radius: 8px; cursor: pointer;
   }
-  .hud-right {
-    display: flex;
-    align-items: center;
-    gap: 18px;
-    flex-wrap: wrap;
-  }
-  #remaining-big {
-    font-size: 52px;
-    color: #b8860b;
-    font-weight: 800;
-    line-height: 1;
-    letter-spacing: 1px;
-    text-shadow: 0 2px 0 #fff, 0 0 18px rgba(245, 179, 1, .45);
-  }
-  .timer-block { min-width: 140px; }
-  #timer-text { font-weight: 700; }
-  #timer-text.low { color: #e0463f; }
-  .timer-bar {
-    height: 10px;
-    width: 140px;
-    background: #e0d3b8;
-    border-radius: 6px;
-    overflow: hidden;
-    margin-top: 4px;
-  }
-  #timer-fill {
-    height: 100%;
-    width: 100%;
-    background: #22a06b;
-  }
-  .score-block { font-weight: 700; }
-  #level-row {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    margin-bottom: 10px;
-  }
-  .captions-row {
-    display: flex;
-    justify-content: space-between;
-    max-width: 1160px;
-    margin: 0 auto;
-  }
-  .captions-row span {
-    width: 560px;
-    text-align: center;
-    font-weight: bold;
-    letter-spacing: 1px;
-  }
-  #game {
+  .btn:hover { border-color: #ffd23d; }
+  .stage { display: flex; gap: 12px; align-items: stretch; justify-content: center; }
+  .panel {
+    width: 540px; height: 405px; border-radius: 10px;
+    border: 3px solid #3a4157; background: #000; cursor: crosshair;
     display: block;
-    margin: 8px auto;
-    background: #fff;
-    border: 4px solid #16324f;
+  }
+  .panel:hover { border-color: #ffd23d; }
+  .mid {
+    width: 120px; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 10px;
+  }
+  #counter-num {
+    font-size: 52px; font-weight: bold; line-height: 1; color: #ffd23d;
+    text-shadow: 0 0 14px rgba(255,210,61,0.85), 0 0 42px rgba(255,150,40,0.5);
+  }
+  #counter-label { font-size: 13px; letter-spacing: 3px; color: #cfd4e4; text-transform: uppercase; }
+  #combo { font-size: 15px; font-weight: bold; color: #7ee0c2; min-height: 20px; }
+  #hint-btn {
+    border: 2px solid #ffb03d; background: #3a2a10; color: #ffd23d;
+    font-size: 14px; font-weight: bold; padding: 10px 14px; border-radius: 10px;
+    cursor: pointer; animation: pulse 1.6s ease-in-out infinite;
+  }
+  #hint-btn.empty { animation: none; opacity: 0.45; }
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255,176,61,0.55); }
+    50% { box-shadow: 0 0 0 9px rgba(255,176,61,0); }
+  }
+  .timer { margin-top: 10px; height: 16px; background: #1c2130; border-radius: 8px; overflow: hidden; position: relative; border: 1px solid #3a4157; }
+  #timer-fill { height: 100%; width: 100%; background: linear-gradient(90deg, #37d67a, #ffd23d); transition: width 0.25s linear; }
+  #timer-text { position: absolute; right: 8px; top: 0; font-size: 11px; line-height: 16px; font-weight: bold; color: #10131a; }
+  .hud { display: flex; align-items: center; gap: 12px; margin-top: 10px; flex-wrap: wrap; }
+  #level-name { font-size: 15px; font-weight: bold; color: #ffd23d; white-space: nowrap; }
+  #score { font-size: 15px; font-weight: bold; color: #7ee0c2; white-space: nowrap; }
+  #found-list { display: flex; gap: 6px; flex-wrap: wrap; flex: 1; }
+  .chip {
+    font-size: 12px; padding: 4px 9px; border-radius: 20px;
+    border: 1px dashed #5a5f73; color: #8a90a8; background: transparent;
+  }
+  .chip.got { border-style: solid; border-color: #37d67a; color: #37d67a; background: rgba(55,214,122,0.12); }
+  .overlay {
+    position: absolute; inset: 0; z-index: 10;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 14px; text-align: center; padding: 20px;
+    background: linear-gradient(180deg,
+      rgba(10,13,20,0.95) 0%,
+      rgba(10,13,20,0.82) 14%,
+      rgba(10,13,20,0.34) 30%,
+      rgba(10,13,20,0.12) 48%,
+      rgba(10,13,20,0.30) 64%,
+      rgba(10,13,20,0.78) 84%,
+      rgba(10,13,20,0.95) 100%);
     border-radius: 12px;
   }
-  #found-list {
-    margin: 10px 0;
-    min-height: 30px;
-  }
-  .found-chip {
-    display: inline-block;
-    border: 1px solid #2f9e44;
-    background: #e3f7e3;
-    border-radius: 999px;
-    margin: 2px;
-    padding: 2px 8px;
-    font-size: 13px;
-  }
-  #msg-line {
-    text-align: center;
-    min-height: 20px;
-    font-weight: 600;
-  }
-  .btn-row {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    flex-wrap: wrap;
-    margin: 10px 0;
-  }
-  button {
-    background: #f7ead7;
-    color: #16324f;
-    border: 2px solid #16324f;
-    border-radius: 8px;
-    padding: 8px 14px;
-    font-weight: bold;
-    cursor: pointer;
-    font-family: inherit;
-  }
-  button.active {
-    background: #16324f;
-    color: #fff;
-  }
-  button.done { opacity: .55; }
-  #howto {
-    max-width: 700px;
-    margin: 10px auto;
-    background: #fff;
-    border: 2px solid #16324f;
-    border-radius: 10px;
-    padding: 14px 18px;
-  }
-  #overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(22, 50, 79, .75);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  #overlay-card {
-    background: #fff;
-    border-radius: 16px;
-    padding: 28px;
-    text-align: center;
-    min-width: 280px;
-    max-width: 90vw;
-  }
   .hidden { display: none !important; }
-  footer {
-    text-align: center;
-    font-size: 12px;
-    opacity: .75;
-    margin-top: 16px;
+  .cover-title { font-size: 54px; letter-spacing: 4px; color: #ffd23d; text-shadow: 0 0 24px rgba(255,210,61,0.6); }
+  .cover-big { font-size: 120px; line-height: 1; font-weight: bold; color: #ffffff; text-shadow: 0 0 30px rgba(255,210,61,0.8), 0 0 80px rgba(255,150,40,0.5); padding: 0 30px; border-radius: 28px; background: radial-gradient(ellipse at center, rgba(10,13,20,0.55) 0%, rgba(10,13,20,0.22) 55%, rgba(10,13,20,0) 78%); }
+  .cover-sub { font-size: 18px; color: #cfd4e4; text-shadow: 0 2px 10px rgba(0,0,0,0.95), 0 0 3px #000000; background: rgba(10,13,20,0.62); padding: 6px 16px; border-radius: 20px; }
+  #start-btn {
+    font-size: 22px; font-weight: bold; letter-spacing: 2px;
+    padding: 14px 42px; border-radius: 12px; cursor: pointer;
+    border: 3px solid #ffd23d; background: #ffd23d; color: #10131a;
+    box-shadow: 0 0 26px rgba(255,210,61,0.55);
   }
+  #cover-levels { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+  .cover-level {
+    border: 2px solid #5a5f73; background: #1c2130; color: #f2ede2;
+    font-size: 13px; padding: 8px 12px; border-radius: 8px; cursor: pointer;
+  }
+  .cover-level:hover { border-color: #ffd23d; color: #ffd23d; }
+  .cover-keys { font-size: 12px; color: #8a90a8; text-shadow: 0 1px 6px rgba(0,0,0,0.95); }
+  #complete-stars { font-size: 44px; color: #ffd23d; letter-spacing: 6px; text-shadow: 0 0 18px rgba(255,210,61,0.6); }
+  #complete-text { font-size: 18px; max-width: 520px; }
+  .overlay .row { display: flex; gap: 10px; }
+  #next-btn, #retry-btn {
+    font-size: 17px; font-weight: bold; padding: 12px 26px; border-radius: 10px; cursor: pointer;
+  }
+  #next-btn { border: 3px solid #ffd23d; background: #ffd23d; color: #10131a; }
+  #retry-btn { border: 2px solid #5a5f73; background: #1c2130; color: #f2ede2; }
+  #paused-badge {
+    position: absolute; top: 70px; left: 50%; transform: translateX(-50%); z-index: 9;
+    background: rgba(16,19,26,0.9); border: 2px solid #ffd23d; color: #ffd23d;
+    font-size: 20px; font-weight: bold; letter-spacing: 3px; padding: 10px 22px; border-radius: 10px;
+  }
+  #lens {
+    position: fixed; z-index: 20; display: none; pointer-events: none;
+    width: 150px; height: 150px; border-radius: 50%;
+  }
+  #selftest { display: none; }
+  footer { margin-top: 10px; font-size: 12px; color: #8a90a8; text-align: center; }
 </style>
 </head>
 <body>
-<div class="wrap">
+<div class="wrap" id="game-wrap">
   <header>
-    <div>
-      <h1>SPOT THE SHIFT</h1>
-      <p class="subtitle">Find every sneaky change — 6 scenes, 48 differences</p>
-    </div>
-    <div class="hud-right">
-      <div id="scene-label">Scene 1</div>
-      <div id="remaining-big">8</div>
-      <div class="timer-block">
-        <span id="timer-text">2:30</span>
-        <div class="timer-bar"><div id="timer-fill"></div></div>
-      </div>
-      <div class="score-block">
-        Score <span id="score-val">0</span>
-        <span id="combo-val"></span>
-      </div>
-    </div>
+    <h1>SPOT <span>THE</span> SHIFT</h1>
+    <div class="spacer"></div>
+    <div id="level-pills"></div>
+    <button class="btn" id="sound-btn">SOUND ON</button>
+    <button class="btn" id="pause-btn">II PAUSE</button>
   </header>
 
-  <div id="level-row"></div>
-
-  <div class="captions-row">
-    <span>LEFT — original</span>
-    <span>RIGHT — spot the changes</span>
+  <div class="stage">
+    <canvas class="panel" id="panel-left" width="640" height="480"></canvas>
+    <div class="mid">
+      <div id="counter-num">8</div>
+      <div id="counter-label">to find</div>
+      <div id="combo">COMBO —</div>
+      <button id="hint-btn">HINT (3)</button>
+    </div>
+    <canvas class="panel" id="panel-right" width="640" height="480"></canvas>
   </div>
 
-  <canvas id="game" width="1160" height="420"></canvas>
+  <div class="timer"><div id="timer-fill"></div><span id="timer-text">180s</span></div>
 
-  <div id="found-list"></div>
-  <p id="msg-line">Find all 8 differences on this scene.</p>
-
-  <div class="btn-row">
-    <button id="hint-btn">Hint (3)</button>
-    <button id="pause-btn">Pause</button>
-    <button id="sound-btn">Sound: on</button>
-    <button id="restart-btn">Restart scene</button>
-    <button id="howto-btn">How to play</button>
+  <div class="hud">
+    <span id="level-name">LEVEL 1 · Coral Reef Dive</span>
+    <span id="score">SCORE 0</span>
+    <div id="found-list"></div>
   </div>
 
-  <div id="howto" class="hidden">
-    <p>Two pictures look the same, but the right one has 8 sneaky changes. Click a difference on either picture to mark it. Wrong clicks cost 5 seconds.</p>
-    <p>Keys: <strong>H</strong> hint, <strong>P</strong> pause, <strong>M</strong> sound, <strong>R</strong> restart, <strong>N</strong> next scene, <strong>1–6</strong> jump to a scene, arrow keys move the crosshair, <strong>Enter</strong> guesses. Hover shows a magnifier.</p>
-    <p>Fair differences are: removed, added, recoloured, moved, resized, flipped, rotated or pattern-changed — sometimes only a small detail shifts.</p>
+  <div id="paused-badge" class="hidden">PAUSED</div>
+
+  <div class="overlay" id="cover">
+    <div class="cover-title">SPOT THE SHIFT</div>
+    <div class="cover-big">48</div>
+    <div class="cover-sub">differences hiding across 6 hand-drawn scenes — find them all, left vs right.</div>
+    <button id="start-btn">▶ START</button>
+    <div id="cover-levels"></div>
+    <div class="cover-keys">Click a difference to mark it · H = hint · P = pause · 1–6 = jump to a level · hover for the magnifier</div>
   </div>
 
-  <div id="overlay" class="hidden"><div id="overlay-card"></div></div>
+  <div class="overlay hidden" id="complete">
+    <div id="complete-stars">★★★</div>
+    <div id="complete-text"></div>
+    <div class="row">
+      <button id="next-btn">NEXT LEVEL →</button>
+      <button id="retry-btn">RETRY</button>
+    </div>
+  </div>
 
-  <footer>
-    Keys: H hint · P pause · M sound · R restart · N next · 1–6 scenes · arrows + Enter to guess · hover = magnifier
-  </footer>
+  <footer>Spot the Shift · 6 scenes × 8 differences · all art drawn in code, no photos</footer>
 </div>
-<script type="module" src="./src/main.js"></script>
+<canvas id="lens" width="150" height="150"></canvas>
+<div id="selftest"></div>
+<script src="src/helpers.js"></script>
+<script src="src/draw-reef.js"></script>
+<script src="src/draw-campfire.js"></script>
+<script src="src/draw-kitchen.js"></script>
+<script src="src/draw-workshop.js"></script>
+<script src="src/draw-oasis.js"></script>
+<script src="src/draw-lodge.js"></script>
+<script src="src/scenes.js"></script>
+<script src="src/main.js"></script>
 </body>
 </html>

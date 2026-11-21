@@ -1,271 +1,406 @@
-import { circle, ellipse, rect, rrect, poly, star, line, vgrad, text, check, ring, softShadow, vignette, speck } from './render.js';
+// Desert Oasis Caravan — dusk oasis, 8 sneaky differences.
+(function () {
+  'use strict';
 
-export function drawOasis(ctx, changed) {
-  // ---------- BACKGROUND: sky, sun, clouds, birds ----------
-  const sky = vgrad(ctx, 0, 0, 560, 240, '#ffe3a3', '#ffb36b');
-  ctx.fillStyle = sky;
-  ctx.fillRect(0, 0, 560, 240);
-
-  circle(ctx, 490, 70, 54, '#ffd98a');
-  circle(ctx, 490, 70, 42, '#ffe9b5');
-  circle(ctx, 490, 70, 30, '#fff6d8');
-
-  const clouds = [[90, 60], [300, 35], [440, 40]];
-  for (const [cx, cy] of clouds) {
-    ellipse(ctx, cx - 20, cy, 26, 13, '#fffdf6');
-    ellipse(ctx, cx + 16, cy + 3, 21, 10, '#fff6e4');
-  }
-
-  const birds = [[150, 90], [220, 70], [380, 100]];
-  for (const [bx, by] of birds) {
-    line(ctx, bx - 7, by - 2, bx, by + 4, '#8a5a24', 2);
-    line(ctx, bx, by + 4, bx + 7, by - 2, '#8a5a24', 2);
-  }
-
-  // ---------- DISTANT DUNES ----------
-  ellipse(ctx, -20, 300, 260, 70, '#e8b45c');
-  ellipse(ctx, -20, 284, 232, 50, '#f2c879');
-  ellipse(ctx, 560, 310, 260, 70, '#e8b45c');
-  ellipse(ctx, 560, 294, 232, 50, '#f2c879');
-  line(ctx, 30, 272, 210, 268, '#f7d79a', 3);
-  line(ctx, 360, 282, 520, 276, '#f7d79a', 3);
-
-  // distant camel silhouette, far away and small
-  ellipse(ctx, 430, 180, 12, 6, '#c98f2e');
-  circle(ctx, 424, 173, 5, '#c98f2e');
-  circle(ctx, 437, 173, 5, '#c98f2e');
-  line(ctx, 419, 178, 413, 167, '#c98f2e', 3);
-  circle(ctx, 412, 165, 3, '#c98f2e');
-  line(ctx, 425, 185, 425, 192, '#c98f2e', 2);
-  line(ctx, 434, 185, 434, 192, '#c98f2e', 2);
-  line(ctx, 442, 179, 449, 184, '#c98f2e', 2);
-
-  // ---------- MIDGROUND: ground dunes ----------
-  ellipse(ctx, 280, 390, 420, 130, '#f2c879');
-  ellipse(ctx, 140, 350, 300, 90, '#e8b45c');
-  ellipse(ctx, 420, 360, 280, 80, '#e8b45c');
-  ellipse(ctx, 130, 330, 210, 14, '#e0aa52');
-  ellipse(ctx, 300, 342, 190, 12, '#e0aa52');
-  ellipse(ctx, 410, 384, 250, 16, '#e0aa52');
-
-  // ---------- MIDGROUND: water pool ----------
-  ellipse(ctx, 330, 255, 95, 52, '#4fc3e8');
-  ellipse(ctx, 330, 255, 70, 36, '#7fd4ef');
-  ellipse(ctx, 330, 262, 44, 18, '#a9e4f7');
-  line(ctx, 296, 244, 320, 244, '#ffffff', 3);
-  line(ctx, 350, 268, 368, 268, '#ffffff', 2);
-  line(ctx, 250, 236, 268, 240, '#e8b45c', 3);
-  line(ctx, 392, 286, 412, 290, '#e8b45c', 3);
-
-  // reeds along the pool edge
-  for (let i = 0; i < 6; i++) {
-    const rx = 260 + i * 10;
-    line(ctx, rx, 220, rx - 4, 250, '#3e9b4f', 3);
-    circle(ctx, rx, 220, 3, '#7a5230');
-  }
-
-  // rocks at the pool edge
-  drawRock(ctx, 240, 290);
-  drawRock(ctx, 424, 284);
-
-  // ---------- MIDGROUND: palms ----------
-  drawPalm(ctx, 180, 120, '#3e9b4f', []);
-  drawPalm(ctx, 520, 130, '#3e9b4f', []);
-
-  // ---------- MIDGROUND: cacti, rocks, grass ----------
-  drawCactus(ctx, 40, 200);
-  drawCactus(ctx, 540, 300);
-  drawRock(ctx, 60, 330);
-  drawRock(ctx, 500, 340);
-  drawRock(ctx, 230, 320);
-  drawGrassTuft(ctx, 120, 300);
-  drawGrassTuft(ctx, 200, 380);
-  drawGrassTuft(ctx, 420, 390);
-  drawGrassTuft(ctx, 520, 180);
-
-  // dotted caravan trail curving toward the pool
-  const trail = [
-    [60, 400, 3], [94, 392, 3], [128, 380, 3], [162, 366, 3],
-    [196, 352, 3], [230, 338, 3], [264, 322, 3], [298, 306, 3]
+  const DIFFS = [
+    { name: 'Lantern', x: 252, y: 199, r: 22 },
+    { name: 'Camel', x: 480, y: 300, r: 40 },
+    { name: 'Palm frond', x: 124, y: 220, r: 24 },
+    { name: 'Rug', x: 320, y: 420, r: 26 },
+    { name: 'Tent flag', x: 140, y: 220, r: 20 },
+    { name: 'Rock', x: 555, y: 420, r: 22 },
+    { name: 'Bird', x: 400, y: 90, r: 18 },
+    { name: 'Pool ripple', x: 360, y: 340, r: 22 },
   ];
-  speck(ctx, trail, '#d9b878');
 
-  // ---- foreground ----
-  ellipse(ctx, 100, 410, 60, 5, '#e0aa52');
-  ellipse(ctx, 300, 415, 70, 5, '#e0aa52');
-  ellipse(ctx, 480, 405, 50, 5, '#e0aa52');
-  ellipse(ctx, 200, 395, 40, 4, '#e0aa52');
-
-  // footprints near the trail end
-  circle(ctx, 280, 320, 2, '#d9b878');
-  circle(ctx, 285, 316, 2, '#d9b878');
-  circle(ctx, 294, 311, 2, '#d9b878');
-  circle(ctx, 299, 307, 2, '#d9b878');
-  circle(ctx, 309, 303, 2, '#d9b878');
-  circle(ctx, 314, 299, 2, '#d9b878');
-
-  // warm light pool
-  ellipse(ctx, 490, 120, 120, 50, 'rgba(255,220,150,0.08)');
-
-  vignette(ctx, 560, 420);
-
-  // ---- diffs ----
-  // 1. palms recoloured
-  drawPalm(ctx, 90, 100, '#3e9b4f', changed.has('palm-tree') ? [1, 3] : []);
-
-  // 2. camel moved
-  const camX = changed.has('camel') ? 364 : 300;
-  const camY = changed.has('camel') ? 66 : 110;
-  ctx.save();
-  ctx.translate(camX, camY);
-  ellipse(ctx, 0, 0, 24, 12, '#b08a5a');
-  ellipse(ctx, -9, -11, 10, 9, '#b08a5a');
-  ellipse(ctx, 8, -12, 10, 9, '#b08a5a');
-  poly(ctx, [[16, -4], [24, -20], [31, -18], [24, 2]], '#b08a5a');
-  ellipse(ctx, 31, -21, 7, 5, '#b08a5a');
-  rect(ctx, 36, -22, 6, 4, '#a07a4c');
-  rect(ctx, -12, -10, 22, 6, '#c0392b');
-  rect(ctx, -6, -9, 4, 4, '#f0d64a');
-  rect(ctx, -18, 10, 3, 14, '#8a6a42');
-  rect(ctx, -8, 10, 3, 14, '#8a6a42');
-  rect(ctx, 6, 10, 3, 14, '#8a6a42');
-  rect(ctx, 16, 10, 3, 14, '#8a6a42');
-  ctx.restore();
-
-  // 3. sun resized
-  const sunScale = changed.has('sun') ? 1.25 : 1;
-  ctx.save();
-  ctx.translate(490, 70);
-  ctx.scale(sunScale, sunScale);
-  for (let i = 0; i < 8; i++) {
+  function palm(ctx, x, y, s, flip, skipFrond) {
     ctx.save();
-    ctx.rotate((i * Math.PI) / 4);
-    rect(ctx, -2, -34, 4, 10, '#ffd76e');
-    ctx.restore();
-  }
-  circle(ctx, 0, 0, 22, '#ffd76e');
-  ctx.restore();
-
-  // 4. tent halves swapped
-  const tentLeft = changed.has('tent') ? '#f7ead7' : '#c0392b';
-  const tentRight = changed.has('tent') ? '#c0392b' : '#f7ead7';
-  ctx.save();
-  ctx.translate(80, 260);
-  poly(ctx, [[-30, 16], [0, -22], [0, 16]], tentLeft);
-  poly(ctx, [[0, 16], [0, -22], [30, 16]], tentRight);
-  poly(ctx, [[-8, 16], [0, -2], [8, 16]], '#3a2a22');
-  rect(ctx, -1, -34, 2, 54, '#8a6a42');
-  poly(ctx, [[1, -34], [14, -29], [1, -24]], '#f0d64a');
-  ctx.restore();
-
-  // 5. water jug removed
-  if (!changed.has('water-jug')) {
-    ctx.save();
-    ctx.translate(240, 250);
-    ellipse(ctx, 0, 4, 12, 11, '#a9673e');
-    rect(ctx, -5, -14, 10, 10, '#a9673e');
-    ellipse(ctx, 0, -14, 6, 3, '#8a522f');
-    ring(ctx, 13, 0, 6, '#8a522f', 2);
-    ctx.restore();
-  }
-
-  // 6. wagon added
-  if (changed.has('wagon')) {
-    ctx.save();
-    ctx.translate(470, 220);
-    rect(ctx, -26, -6, 52, 14, '#7a5a3a');
-    rect(ctx, -20, -18, 40, 12, '#8f6b45');
-    rect(ctx, -20, -18, 40, 3, '#6b4d30');
-    circle(ctx, -16, 12, 9, '#4a3520');
-    circle(ctx, 16, 12, 9, '#4a3520');
-    circle(ctx, -16, 12, 3, '#8f6b45');
-    circle(ctx, 16, 12, 3, '#8f6b45');
-    line(ctx, -25, 12, -7, 12, '#8f6b45', 1.5);
-    line(ctx, -16, 3, -16, 21, '#8f6b45', 1.5);
-    line(ctx, 7, 12, 25, 12, '#8f6b45', 1.5);
-    line(ctx, 16, 3, 16, 21, '#8f6b45', 1.5);
-    ctx.restore();
-  }
-
-  // 7. woven rug pattern
-  ctx.save();
-  ctx.translate(150, 370);
-  rrect(ctx, -30, -14, 60, 28, 4, '#c0392b');
-  rrect(ctx, -24, -10, 48, 20, 3, '#3f7fe0');
-  if (changed.has('woven-rug')) {
-    poly(ctx, [[-16, 0], [-10, -6], [-4, 0], [-10, 6]], '#f0d64a');
-    poly(ctx, [[4, 0], [10, -6], [16, 0], [10, 6]], '#f0d64a');
-  } else {
-    line(ctx, -22, -5, 22, -5, '#c0392b', 2);
-    line(ctx, -22, 0, 22, 0, '#c0392b', 2);
-    line(ctx, -22, 5, 22, 5, '#c0392b', 2);
-  }
-  ctx.restore();
-
-  // 8. falcon moved
-  const falX = changed.has('falcon') ? 316 : 380;
-  const falY = changed.has('falcon') ? 394 : 350;
-  ctx.save();
-  ctx.translate(falX, falY);
-  ellipse(ctx, 0, 0, 14, 11, '#8a7a5a');
-  ellipse(ctx, 8, -12, 7, 6, '#8a7a5a');
-  poly(ctx, [[14, -13], [22, -10], [14, -7]], '#c9a227');
-  ellipse(ctx, -2, 0, 9, 7, '#6b5a3a');
-  rect(ctx, -4, 9, 2, 9, '#c9a227');
-  rect(ctx, 4, 9, 2, 9, '#c9a227');
-  ctx.restore();
-}
-function drawPalm(ctx, x, y, frondColor, orangeIdx) {
-  ctx.strokeStyle = '#8a5a2b';
-  ctx.lineWidth = 8;
-  ctx.lineCap = 'round';
-  ctx.beginPath();
-  ctx.moveTo(x, y + 32);
-  ctx.quadraticCurveTo(x + 6, y, x + 2, y - 30);
-  ctx.stroke();
-  for (let i = 0; i < 5; i++) {
-    const a = -Math.PI * (0.15 + i * 0.175);
-    const tipX = x + 2 + Math.cos(a) * 34;
-    const tipY = y - 30 + Math.sin(a) * 16;
+    ctx.translate(x, y);
+    ctx.scale(flip ? -1 : 1, 1);
+    ctx.strokeStyle = '#7a5230';
+    ctx.lineWidth = 10 * s;
+    ctx.lineCap = 'round';
     ctx.beginPath();
-    ctx.moveTo(x + 2, y - 30);
-    ctx.quadraticCurveTo(x + 2 + Math.cos(a) * 20, y - 30 + Math.sin(a) * 4, tipX, tipY);
-    ctx.quadraticCurveTo(x + 2 + Math.cos(a) * 16, y - 30 + Math.sin(a) * 12, x + 2, y - 30);
-    ctx.fillStyle = orangeIdx.includes(i) ? '#e07b39' : frondColor;
+    ctx.moveTo(0, 0);
+    ctx.quadraticCurveTo(8 * s, -50 * s, 22 * s, -86 * s);
+    ctx.stroke();
+    ctx.strokeStyle = '#3f7a3a';
+    ctx.lineWidth = 5 * s;
+    for (let i = 0; i < 6; i++) {
+      if (skipFrond && i === 2) continue;
+      const a = -0.4 - i * 0.42;
+      ctx.beginPath();
+      ctx.moveTo(22 * s, -86 * s);
+      ctx.quadraticCurveTo(
+        22 * s + Math.cos(a) * 34 * s,
+        -86 * s + Math.sin(a) * 22 * s - 8 * s,
+        22 * s + Math.cos(a) * 52 * s,
+        -86 * s + Math.sin(a) * 34 * s + 12 * s
+      );
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function draw(ctx, W, H, shifted) {
+    const h = window.H;
+    const R = h.rng(67);
+
+    // --- dusk sky ---
+    ctx.fillStyle = h.lg(ctx, 0, 0, 0, H, [
+      [0, '#7a4a8a'],
+      [0.45, '#ff6b8a'],
+      [0.75, '#ff9a56'],
+      [1, '#ffc46b'],
+    ]);
+    ctx.fillRect(0, 0, W, H);
+    // low sun + glow
+    h.glow(ctx, 480, 210, 120, '#ffe9a8', 0.55);
+    ctx.fillStyle = '#fff3c9';
+    h.circ(ctx, 480, 210, 34);
+    ctx.fill();
+    // birds (one extra appears when shifted)
+    ctx.strokeStyle = '#4a2a4a';
+    ctx.lineWidth = 2.5;
+    ctx.lineCap = 'round';
+    const birds = [
+      [150, 80],
+      [220, 110],
+      [300, 70],
+    ];
+    for (const b of birds) {
+      ctx.beginPath();
+      ctx.moveTo(b[0] - 9, b[1]);
+      ctx.quadraticCurveTo(b[0] - 3, b[1] - 7, b[0], b[1]);
+      ctx.quadraticCurveTo(b[0] + 3, b[1] - 7, b[0] + 9, b[1]);
+      ctx.stroke();
+    }
+    if (shifted) {
+      ctx.beginPath();
+      ctx.moveTo(391, 90);
+      ctx.quadraticCurveTo(397, 83, 400, 90);
+      ctx.quadraticCurveTo(403, 83, 409, 90);
+      ctx.stroke();
+    }
+
+    // --- distant dunes + haze ---
+    ctx.fillStyle = '#c97b4a';
+    ctx.beginPath();
+    ctx.moveTo(0, 260);
+    ctx.quadraticCurveTo(160, 200, 320, 252);
+    ctx.quadraticCurveTo(480, 300, 640, 240);
+    ctx.lineTo(640, 340);
+    ctx.lineTo(0, 340);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#a85a34';
+    ctx.beginPath();
+    ctx.moveTo(0, 300);
+    ctx.quadraticCurveTo(200, 260, 400, 300);
+    ctx.quadraticCurveTo(540, 330, 640, 290);
+    ctx.lineTo(640, 360);
+    ctx.lineTo(0, 360);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = 'rgba(255,180,120,0.25)';
+    ctx.fillRect(0, 250, W, 30);
+
+    // --- sand ---
+    ctx.fillStyle = h.lg(ctx, 0, 340, 0, H, [[0, '#f0c98a'], [1, '#d9a55e']]);
+    ctx.fillRect(0, 340, W, 140);
+    ctx.strokeStyle = 'rgba(160,110,50,0.4)';
+    ctx.lineWidth = 2;
+    for (let i = 0; i < 6; i++) {
+      const y = 360 + i * 18;
+      ctx.beginPath();
+      for (let x = 0; x <= W; x += 20) {
+        const yy = y + Math.sin(x / 70 + i * 2) * 3;
+        if (x === 0) ctx.moveTo(x, yy);
+        else ctx.lineTo(x, yy);
+      }
+      ctx.stroke();
+    }
+    // footprints
+    ctx.fillStyle = 'rgba(120,80,30,0.5)';
+    for (let i = 0; i < 7; i++) {
+      h.el(ctx, 90 + i * 22, 440 + (i % 2) * 8, 6, 3.5);
+      ctx.fill();
+    }
+
+    // --- pool (centre) ---
+    ctx.save();
+    ctx.fillStyle = '#2f8fc2';
+    h.el(ctx, 320, 330, 130, 34);
+    ctx.fill();
+    ctx.fillStyle = '#5ab0dd';
+    h.el(ctx, 320, 326, 110, 24);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.65)';
+    ctx.lineWidth = 2;
+    h.el(ctx, 300, 326, 60, 12);
+    ctx.stroke();
+    // ripples: one swaps colour when shifted
+    ctx.strokeStyle = shifted ? '#ffd23d' : 'rgba(255,255,255,0.8)';
+    ctx.lineWidth = 2;
+    h.el(ctx, 360, 340, 26, 7);
+    ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,255,255,0.6)';
+    h.el(ctx, 280, 338, 18, 5);
+    ctx.stroke();
+    ctx.restore();
+
+    // --- caravan tents (left) ---
+    ctx.save();
+    ctx.translate(140, 300);
+    ctx.fillStyle = '#e8dcc0';
+    ctx.beginPath();
+    ctx.moveTo(0, -70);
+    ctx.lineTo(-58, 10);
+    ctx.lineTo(58, 10);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#d64545';
+    ctx.beginPath();
+    ctx.moveTo(0, -70);
+    ctx.lineTo(-30, 10);
+    ctx.lineTo(-10, 10);
+    ctx.closePath();
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(0, -70);
+    ctx.lineTo(10, 10);
+    ctx.lineTo(30, 10);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#5a2d12';
+    ctx.beginPath();
+    ctx.moveTo(0, -22);
+    ctx.lineTo(-14, 10);
+    ctx.lineTo(14, 10);
+    ctx.closePath();
+    ctx.fill();
+    // flag pole + flag (flag flips when shifted)
+    ctx.strokeStyle = '#5a4632';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(0, -70);
+    ctx.lineTo(0, -96);
+    ctx.stroke();
+    ctx.fillStyle = '#ffd23d';
+    ctx.beginPath();
+    if (shifted) {
+      ctx.moveTo(0, -96);
+      ctx.lineTo(-24, -90);
+      ctx.lineTo(0, -82);
+    } else {
+      ctx.moveTo(0, -96);
+      ctx.lineTo(24, -90);
+      ctx.lineTo(0, -82);
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+    // second smaller tent
+    ctx.fillStyle = '#4a7ac2';
+    ctx.beginPath();
+    ctx.moveTo(230, 250);
+    ctx.lineTo(190, 310);
+    ctx.lineTo(270, 310);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#e8dcc0';
+    ctx.beginPath();
+    ctx.moveTo(230, 250);
+    ctx.lineTo(214, 310);
+    ctx.lineTo(246, 310);
+    ctx.closePath();
+    ctx.fill();
+
+    // --- palm trees ---
+    palm(ctx, 90, 330, 1.1, false, shifted);
+    palm(ctx, 570, 340, 0.9, true, false);
+    palm(ctx, 250, 300, 0.7, false, false);
+    // coconuts
+    ctx.fillStyle = '#6b4423';
+    h.circ(ctx, 108, 232, 6);
+    ctx.fill();
+    h.circ(ctx, 120, 236, 6);
+    ctx.fill();
+
+    // --- camels (right, one grows when shifted) ---
+    ctx.save();
+    ctx.translate(480, 300);
+    const cs = shifted ? 1.3 : 1;
+    ctx.scale(cs, cs);
+    ctx.fillStyle = '#d9a55e';
+    // body
+    h.el(ctx, 0, 0, 52, 26);
+    ctx.fill();
+    // humps
+    h.el(ctx, -18, -22, 18, 14);
+    ctx.fill();
+    h.el(ctx, 16, -22, 18, 14);
+    ctx.fill();
+    // saddle blanket
+    ctx.fillStyle = '#d64545';
+    h.rr(ctx, -30, -26, 60, 14, 4);
+    ctx.fill();
+    // neck + head
+    ctx.strokeStyle = '#d9a55e';
+    ctx.lineWidth = 12;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(44, -8);
+    ctx.quadraticCurveTo(62, -34, 58, -52);
+    ctx.stroke();
+    h.el(ctx, 58, -56, 14, 8);
+    ctx.fill();
+    ctx.fillStyle = '#5a4632';
+    h.circ(ctx, 62, -58, 2);
+    ctx.fill();
+    // legs
+    ctx.strokeStyle = '#d9a55e';
+    ctx.lineWidth = 8;
+    for (const lx of [-34, -14, 14, 34]) {
+      ctx.beginPath();
+      ctx.moveTo(lx, 18);
+      ctx.lineTo(lx, 52);
+      ctx.stroke();
+    }
+    // tail
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(-50, -6);
+    ctx.quadraticCurveTo(-60, 14, -54, 30);
+    ctx.stroke();
+    ctx.restore();
+    // second camel, smaller, behind
+    ctx.save();
+    ctx.translate(560, 320);
+    ctx.fillStyle = '#c08a4a';
+    h.el(ctx, 0, 0, 38, 20);
+    ctx.fill();
+    h.el(ctx, 0, -16, 13, 10);
+    ctx.fill();
+    ctx.strokeStyle = '#c08a4a';
+    ctx.lineWidth = 9;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(32, -6);
+    ctx.quadraticCurveTo(44, -26, 42, -40);
+    ctx.stroke();
+    h.el(ctx, 42, -42, 10, 6);
+    ctx.fill();
+    ctx.restore();
+
+    // --- lantern pole + lanterns (glow recolours when shifted) ---
+    ctx.save();
+    ctx.strokeStyle = '#5a4632';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(220, 330);
+    ctx.lineTo(220, 170);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(220, 170);
+    ctx.lineTo(260, 170);
+    ctx.stroke();
+    h.glow(ctx, 252, 200, 30, shifted ? '#7affc9' : '#ffd23d', 0.6);
+    ctx.fillStyle = '#3a3f4a';
+    h.rr(ctx, 244, 186, 16, 26, 5);
+    ctx.fill();
+    ctx.fillStyle = shifted ? '#7affc9' : '#ffd23d';
+    h.rr(ctx, 247, 192, 10, 14, 3);
+    ctx.fill();
+    ctx.restore();
+
+    // --- rugs (foreground, pattern changes when shifted) ---
+    ctx.save();
+    ctx.translate(320, 420);
+    ctx.fillStyle = '#b03a3a';
+    h.rr(ctx, -70, -18, 140, 36, 6);
+    ctx.fill();
+    ctx.fillStyle = '#e8dcc0';
+    if (shifted) {
+      ctx.fillRect(-60, -8, 120, 5);
+      ctx.fillRect(-60, 6, 120, 5);
+    } else {
+      for (let i = -2; i <= 2; i++) {
+        ctx.save();
+        ctx.translate(i * 26, 0);
+        ctx.rotate(Math.PI / 4);
+        ctx.fillRect(-7, -7, 14, 14);
+        ctx.restore();
+      }
+    }
+    ctx.restore();
+    ctx.fillStyle = '#4a7ac2';
+    h.rr(ctx, 430, 428, 90, 26, 5);
+    ctx.fill();
+    ctx.fillStyle = '#e8dcc0';
+    ctx.fillRect(444, 438, 62, 4);
+
+    // --- rock (moves when shifted) ---
+    const rx = shifted ? 570 : 540;
+    ctx.fillStyle = '#8a7a6a';
+    h.el(ctx, rx, 420, 20, 12);
+    ctx.fill();
+    ctx.fillStyle = '#a89a8a';
+    h.el(ctx, rx - 5, 416, 9, 5);
+    ctx.fill();
+    // small stones + tufts
+    h.speckle(ctx, R, 40, 400, 560, 60, 40, '#8a6a45', 1, 3, 0.5);
+
+    // --- extra sky life, light streaks, ground shadows, stones (identical in both) ---
+    ctx.strokeStyle = '#4a2a4a';
+    ctx.lineWidth = 2.5;
+    ctx.lineCap = 'round';
+    for (const b of [[80, 60], [550, 60]]) {
+      ctx.beginPath();
+      ctx.moveTo(b[0] - 9, b[1]);
+      ctx.quadraticCurveTo(b[0] - 3, b[1] - 7, b[0], b[1]);
+      ctx.quadraticCurveTo(b[0] + 3, b[1] - 7, b[0] + 9, b[1]);
+      ctx.stroke();
+    }
+    ctx.fillStyle = 'rgba(255,255,255,0.22)';
+    ctx.beginPath();
+    ctx.moveTo(120, 100);
+    ctx.lineTo(180, 88);
+    ctx.lineTo(182, 96);
+    ctx.lineTo(122, 108);
+    ctx.closePath();
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(250, 60);
+    ctx.lineTo(300, 50);
+    ctx.lineTo(302, 58);
+    ctx.lineTo(252, 68);
+    ctx.closePath();
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(560, 120);
+    ctx.lineTo(610, 110);
+    ctx.lineTo(612, 118);
+    ctx.lineTo(562, 128);
+    ctx.closePath();
+    ctx.fill();
+    ctx.save();
+    ctx.globalAlpha = 0.12;
+    ctx.fillStyle = '#4a2a1a';
+    h.el(ctx, 150, 400, 70, 10);
+    ctx.fill();
+    h.el(ctx, 560, 375, 50, 8);
+    ctx.fill();
+    ctx.restore();
+    ctx.fillStyle = '#8a7a6a';
+    h.el(ctx, 60, 380, 9, 6);
+    ctx.fill();
+    h.el(ctx, 420, 460, 11, 6);
+    ctx.fill();
+    h.el(ctx, 620, 380, 10, 6);
     ctx.fill();
   }
-  circle(ctx, x - 4, y - 24, 5, '#6b4226');
-  circle(ctx, x + 6, y - 22, 5, '#6b4226');
-}
 
-function drawCactus(ctx, x, y) {
-  softShadow(ctx, x, y + 16, 14, 4);
-  rrect(ctx, x - 5, y - 18, 10, 34, 5, '#3e9b4f');
-  rrect(ctx, x - 14, y - 8, 8, 14, 4, '#3e9b4f');
-  rect(ctx, x - 14, y - 2, 10, 6, '#3e9b4f');
-  rrect(ctx, x + 6, y - 12, 8, 16, 4, '#357f43');
-  rect(ctx, x + 4, y - 2, 10, 6, '#357f43');
-  circle(ctx, x - 2, y - 10, 1, '#7fbf8a');
-  circle(ctx, x + 1, y, 1, '#7fbf8a');
-  circle(ctx, x - 1, y + 8, 1, '#7fbf8a');
-}
-
-function drawRock(ctx, x, y) {
-  softShadow(ctx, x, y + 5, 13, 3.5);
-  ellipse(ctx, x, y, 13, 9, '#9a9a9a');
-  ellipse(ctx, x - 3, y - 3, 9, 6, '#c2c2c2');
-  ellipse(ctx, x + 6, y + 2, 4.5, 3, '#b0b0b0');
-}
-
-function drawGrassTuft(ctx, x, y) {
-  const tips = [
-    [x - 10, y - 12],
-    [x - 5, y - 15],
-    [x, y - 16],
-    [x + 5, y - 15],
-    [x + 10, y - 12]
-  ];
-  for (let i = 0; i < tips.length; i++) {
-    line(ctx, x, y, tips[i][0], tips[i][1], i % 2 === 0 ? '#3e9b4f' : '#5c8f4f', 2);
-  }
-}
+  window.DrawOasis = draw;
+  window.OASIS_DIFFS = DIFFS;
+})();
