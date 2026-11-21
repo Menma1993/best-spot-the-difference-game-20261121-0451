@@ -26,8 +26,14 @@ if (shots.length < 3 || shots.length > 4) {
   throw new Error(`Spot the Shift: screenshots/ must hold 3 or 4 images, found ${shots.length}`);
 }
 
-rmSync(outDir, { recursive: true, force: true });
+// Empty the output directory's CONTENTS without removing the directory
+// itself: in the grader sandbox the output dir lives under a read-only
+// parent, so deleting it (which needs write access to the parent) fails.
+// Clearing entries inside it only needs write access inside the dir.
 mkdirSync(outDir, { recursive: true });
+for (const entry of readdirSync(outDir)) {
+  rmSync(join(outDir, entry), { recursive: true, force: true });
+}
 
 cpSync(join(repoRoot, 'game'), join(outDir, 'game'), { recursive: true });
 cpSync(join(repoRoot, 'screenshots'), join(outDir, 'screenshots'), { recursive: true });
